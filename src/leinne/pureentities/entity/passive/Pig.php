@@ -70,10 +70,14 @@ class Pig extends Animal{
 
     public function getDrops() : array{
         $drops = [
-            ItemFactory::getInstance()->get($this->isOnFire() ? ItemIds::COOKED_PORKCHOP : ItemIds::RAW_PORKCHOP, 0, mt_rand(1, 3))
+            $meat = $this->isOnFire()
+        ? VanillaItems::COOKED_PORKCHOP()
+        : VanillaItems::RAW_PORKCHOP(),
+
+    $meat->setCount(mt_rand(1, 3))
         ];
         if($this->saddle){
-            $drops[] = ItemFactory::getInstance()->get(ItemIds::SADDLE);
+           // $drops[] = ItemFactory::getInstance()->get(ItemIds::SADDLE);
         }
         return $drops;
     }
