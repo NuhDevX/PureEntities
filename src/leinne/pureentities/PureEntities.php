@@ -273,33 +273,7 @@ class PureEntities extends PluginBase implements Listener{
                 $vehicle->updateMotion($packet->motionX, $packet->motionY);
             }
         }
-    }
-
-    public function onInteractEvent(PlayerInteractEvent $ev) : void{
-        //TODO: MonsterSpawner 기능 준비
-        /*if($ev->getAction() !== PlayerInteractEvent::RIGHT_CLICK_BLOCK){
-            return;
-        }
-
-        $item = $ev->getItem();
-        $block = $ev->getBlock();
-        if($item->getId() === ItemIds::SPAWN_EGG && $block->getId() === ItemIds::MONSTER_SPAWNER){
-            $ev->cancel();
-
-            $tile = $block->getPos()->getWorld()->getTile($block->getPos());
-            if($tile instanceof tile\MonsterSpawner){
-                $tile->setSpawnEntityType($item->getMeta());
-            }else{
-                if($tile !== null){
-                    $tile->close();
-                }
-
-                $tile = TileFactory::create("MobSpawner", $block->getPos()->getWorld(), $block->getPos());
-                $tile->readSaveData(CompoundTag::create()->setInt("EntityId", $item->getMeta()));
-                $tile->getPos()->getWorld()->addTile($tile);
-            }
-        }*/
-    }
+}
 
     /**
      * @priority MONITOR
@@ -310,11 +284,11 @@ class PureEntities extends PluginBase implements Listener{
         $item = $ev->getItem();
         $block = $ev->getBlock();
         $player = $ev->getPlayer();
-        $bid = $block->getId();
-        if($bid === BlockLegacyIds::JACK_O_LANTERN || $bid === BlockLegacyIds::PUMPKIN || $bid === BlockLegacyIds::CARVED_PUMPKIN){
+        $bid = $block->getTypeId();
+        if($bid === BlockLegacyIds::LIT_PUMPKIN || $bid === BlockLegacyIds::PUMPKIN || $bid === BlockLegacyIds::CARVED_PUMPKIN){
             if(
-                $block->getSide(Facing::DOWN)->getId() === BlockLegacyIds::SNOW_BLOCK
-                && $block->getSide(Facing::DOWN, 2)->getId() === BlockLegacyIds::SNOW_BLOCK
+                $block->getSide(Facing::DOWN)->getTypeId() === BlockLegacyIds::SNOW
+                && $block->getSide(Facing::DOWN, 2)->getTypeId() === BlockLegacyIds::SNOW
             ){
                 $ev->cancel();
 
@@ -333,18 +307,18 @@ class PureEntities extends PluginBase implements Listener{
                     $player->getInventory()->setItemInHand($item);
                 }
             }elseif(
-                ($down = $block->getSide(Facing::DOWN))->getId() === BlockLegacyIds::IRON_BLOCK
-                && $block->getSide(Facing::DOWN, 2)->getId() === BlockLegacyIds::IRON_BLOCK
+                ($down = $block->getSide(Facing::DOWN))->getTypeId() === BlockLegacyIds::IRON
+                && $block->getSide(Facing::DOWN, 2)->getTypeId() === BlockLegacyIds::IRON
             ){
-                if(($first = $down->getSide(Facing::EAST))->getId() === BlockLegacyIds::IRON_BLOCK){
+                if(($first = $down->getSide(Facing::EAST))->getTypeId() === BlockLegacyIds::IRON){
                     $second = $down->getSide(Facing::WEST);
                 }
 
-                if(!isset($second) && ($first = $down->getSide(Facing::NORTH))->getId() === BlockLegacyIds::IRON_BLOCK){
+                if(!isset($second) && ($first = $down->getSide(Facing::NORTH))->getTypeId() === BlockLegacyIds::IRON){
                     $second = $down->getSide(Facing::SOUTH);
                 }
 
-                if(!isset($second) || $second->getId() !== BlockLegacyIds::IRON_BLOCK){
+                if(!isset($second) || $second->getTypeId() !== BlockLegacyIds::IRON){
                     return;
                 }
 
@@ -364,38 +338,4 @@ class PureEntities extends PluginBase implements Listener{
             }
         }
     }
-
-    //TODO: check golem block shape
-    /*private function canSpawnGolem(Position $pos, int $id) : bool{
-        $resultShape = [];
-        for($x = -1; $x < 2; ++$x){
-            for($y = -1; $y > -3; --$y){
-                $resultShape[$x + 1][$y + 2] = $pos->world->getBlock($pos->add($x, $y, 0))->getId() === $id ? "O" : "X";
-            }
-        }
-        return $resultShape == [["O", "X"], ["O", "O"], ["O", "X"]];
-    }*/
-
-    //TODO: SilverFish
-    /*public function BlockBreakEvent(BlockBreakEvent $ev){
-        if($ev->isCancelled()){
-            return;
-        }
-
-        $block = $ev->getBlock();
-        if(
-            (
-                $block->getId() === BlockLegacyIds::STONE
-                or $block->getId() === BlockLegacyIds::STONE_WALL
-                or $block->getId() === BlockLegacyIds::STONE_BRICK
-                or $block->getId() === BlockLegacyIds::STONE_BRICK_STAIRS
-            ) && ($block->level->getBlockLightAt((int) $block->x, (int) $block->y, (int) $block->z) < 12 and mt_rand(1, 5) < 2)
-        ){
-            $entity = PureEntities::create("Silverfish", $block);
-            if($entity !== \null){
-                $entity->spawnToAll();
-            }
-        }
-    }*/
-
 }
