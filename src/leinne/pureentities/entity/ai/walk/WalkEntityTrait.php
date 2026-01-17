@@ -9,8 +9,8 @@ use leinne\pureentities\entity\ai\navigator\EntityNavigator;
 use leinne\pureentities\entity\ai\navigator\WalkEntityNavigator;
 use leinne\pureentities\entity\LivingBase;
 use pocketmine\block\Block;
+use pocketmine\block\VanillaBlocks;
 use pocketmine\entity\Entity;
-use pocketmine\item\ItemFactory;
 use pocketmine\network\mcpe\protocol\LevelEventPacket;
 use pocketmine\world\particle\DestroyBlockParticle;
 use pocketmine\world\Position;
@@ -142,7 +142,7 @@ trait WalkEntityTrait{
                 }
 
                 if(--$this->doorBreakTime <= 0){
-                    $this->doorBlock->onBreak(ItemFactory::air());
+                    $this->doorBlock->onBreak(VanillaBlocks::AIR()->asItem());
                     $pos->world->addSound($pos, new DoorCrashSound());
                     $pos->world->addParticle($pos->add(0.5, 0.5, 0.5), new DestroyBlockParticle($this->doorBlock));
                 }
