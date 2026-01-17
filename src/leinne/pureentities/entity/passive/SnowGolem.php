@@ -49,7 +49,7 @@ class SnowGolem extends Monster{
         if($item instanceof Shears && $this->pumpkin){
             $item->applyDamage(1);
             $this->pumpkin = false;
-            $this->getWorld()->addSound($this->location, new ShearSound());
+            $this->getWorld()->addSound($this->location, new ShearSound($this));
             return true;
         }
         return false;
