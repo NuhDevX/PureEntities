@@ -21,9 +21,9 @@ use leinne\pureentities\entity\passive\SnowGolem;
 use leinne\pureentities\event\EntityInteractByPlayerEvent;
 use leinne\pureentities\task\AutoSpawnTask;
 use leinne\pureentities\entity\Vehicle;
-use pocketmine\block\BlockLegacyIds;
+use pocketmine\block\BlockTypeIds as BlockLegacyIds;
 use pocketmine\block\VanillaBlocks;
-use pocketmine\data\bedrock\EntityLegacyIds;
+use pocketmine\network\mcpe\protocol\types\entity\EntityIds as EntityLegacyIds;
 use pocketmine\entity\Entity;
 use pocketmine\entity\EntityDataHelper;
 use pocketmine\entity\EntityFactory;
@@ -35,22 +35,26 @@ use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\event\server\DataPacketReceiveEvent;
-use pocketmine\item\ItemFactory;
 use pocketmine\item\ItemIdentifier;
-use pocketmine\item\ItemIds;
+use pocketmine\item\ItemTypeIds as ItemIds;
 use pocketmine\item\SpawnEgg;
 use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\protocol\AnimatePacket;
 use pocketmine\network\mcpe\protocol\InteractPacket;
 use pocketmine\network\mcpe\protocol\InventoryTransactionPacket;
 use pocketmine\network\mcpe\protocol\MoveActorAbsolutePacket;
-use pocketmine\network\mcpe\protocol\PlayerInputPacket;
+use pocketmine\network\mcpe\protocol\PlayerAuthInputPacket;
 use pocketmine\network\mcpe\protocol\types\inventory\UseItemOnEntityTransactionData;
 use pocketmine\math\Facing;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\TextFormat;
 use pocketmine\world\World;
+
+use pocketmine\data\bedrock\item\SavedItemData;
+use pocketmine\inventory\CreativeInventory;
+use pocketmine\item\StringToItemParser;
+use pocketmine\world\format\io\GlobalItemDataHandlers;
 
 class PureEntities extends PluginBase implements Listener{
     public static bool $enableAstar = true;
@@ -100,73 +104,66 @@ class PureEntities extends PluginBase implements Listener{
         }, ["SnowGolem", "minecraft:snow_golem"]);
 
         //BlockFactory::register(new block\MonsterSpawner(new BlockIdentifier(BlockLegacyIds::MOB_SPAWNER, 0, null, tile\MonsterSpawner::class), "Monster Spawner"), true);
-
-        $itemFactory = ItemFactory::getInstance();
         /** Register hostile */
-        $itemFactory->register(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::CREEPER), "Creeper Spawn Egg") extends SpawnEgg{
+        $this->registerItem(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::CREEPER), "Creeper Spawn Egg") extends SpawnEgg{
             protected function createEntity(World $world, Vector3 $pos, float $yaw, float $pitch) : Entity{
                 return new Creeper(Location::fromObject($pos, $world, $yaw, $pitch));
             }
-        }, true);
-        $itemFactory->register(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::SKELETON), "Skeleton Spawn Egg") extends SpawnEgg{
+        }, "minecraft:creeper_spawn_egg");
+        $this->registerItem(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::SKELETON), "Skeleton Spawn Egg") extends SpawnEgg{
             protected function createEntity(World $world, Vector3 $pos, float $yaw, float $pitch) : Entity{
                 return new Skeleton(Location::fromObject($pos, $world, $yaw, $pitch));
             }
-        }, true);
-        $itemFactory->register(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::ZOMBIE), "Zombie Spawn Egg") extends SpawnEgg{
-            protected function createEntity(World $world, Vector3 $pos, float $yaw, float $pitch) : Entity{
-                return new Zombie(Location::fromObject($pos, $world, $yaw, $pitch));
-            }
-        }, true);
+        }, "minecraft:skeleton_spawn_egg");
 
         /** Register neutral */
-        $itemFactory->register(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::IRON_GOLEM), "IronGolem Spawn Egg") extends SpawnEgg{
+        $this->registerItem(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::IRON_GOLEM), "IronGolem Spawn Egg") extends SpawnEgg{
             protected function createEntity(World $world, Vector3 $pos, float $yaw, float $pitch) : Entity{
                 return new IronGolem(Location::fromObject($pos, $world, $yaw, $pitch));
             }
-        }, true);
-        $itemFactory->register(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::ZOMBIE_PIGMAN), "ZombifiedPiglin Spawn Egg") extends SpawnEgg{
+        }, "minecraft:iron_golem_spawn_egg");
+        $this->registerItem(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::ZOMBIE_PIGMAN), "ZombifiedPiglin Spawn Egg") extends SpawnEgg{
             protected function createEntity(World $world, Vector3 $pos, float $yaw, float $pitch) : Entity{
                 return new ZombifiedPiglin(Location::fromObject($pos, $world, $yaw, $pitch));
             }
-        }, true);
-        $itemFactory->register(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::SPIDER), "Spider Spawn Egg") extends SpawnEgg{
+        }, "minecraft:zombified_spawn_egg");
+        $this->registerItem(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::SPIDER), "Spider Spawn Egg") extends SpawnEgg{
             protected function createEntity(World $world, Vector3 $pos, float $yaw, float $pitch) : Entity{
                 return new Spider(Location::fromObject($pos, $world, $yaw, $pitch));
             }
-        }, true);
+        }, "minecraft:spider_spawn_egg");
 
         /** Register passive */
-        $itemFactory->register(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::CHICKEN), "Chicken Spawn Egg") extends SpawnEgg{
+        $this->registerItem(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::CHICKEN), "Chicken Spawn Egg") extends SpawnEgg{
             protected function createEntity(World $world, Vector3 $pos, float $yaw, float $pitch) : Entity{
                 return new Chicken(Location::fromObject($pos, $world, $yaw, $pitch));
             }
-        }, true);
-        $itemFactory->register(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::COW), "Cow Spawn Egg") extends SpawnEgg{
+        }, "minecraft:chicken_spawn_egg");
+        $this->registerItem(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::COW), "Cow Spawn Egg") extends SpawnEgg{
             protected function createEntity(World $world, Vector3 $pos, float $yaw, float $pitch) : Entity{
                 return new Cow(Location::fromObject($pos, $world, $yaw, $pitch));
             }
-        }, true);
-        $itemFactory->register(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::MOOSHROOM), "Mooshroom Spawn Egg") extends SpawnEgg{
+        },  "minecraft:cow_spawn_egg");
+        $this->registerItem(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::MOOSHROOM), "Mooshroom Spawn Egg") extends SpawnEgg{
             protected function createEntity(World $world, Vector3 $pos, float $yaw, float $pitch) : Entity{
                 return new Mooshroom(Location::fromObject($pos, $world, $yaw, $pitch));
             }
-        }, true);
-        $itemFactory->register(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::PIG), "Pig Spawn Egg") extends SpawnEgg{
+        }, "minecraft:mooshroom_spawn_egg");
+        $this->registerItem(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::PIG), "Pig Spawn Egg") extends SpawnEgg{
             protected function createEntity(World $world, Vector3 $pos, float $yaw, float $pitch) : Entity{
                 return new Pig(Location::fromObject($pos, $world, $yaw, $pitch));
             }
-        }, true);
-        $itemFactory->register(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::SHEEP), "Sheep Spawn Egg") extends SpawnEgg{
+        }, "minecraft:pig_spawn_egg");
+        $this->registerItem(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::SHEEP), "Sheep Spawn Egg") extends SpawnEgg{
             protected function createEntity(World $world, Vector3 $pos, float $yaw, float $pitch) : Entity{
                 return new Sheep(Location::fromObject($pos, $world, $yaw, $pitch));
             }
-        }, true);
-        $itemFactory->register(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::SNOW_GOLEM), "SnowGolem Spawn Egg") extends SpawnEgg{
+        }, "minecraft:sheep_spawn_egg");
+        $this->registerItem(new class(new ItemIdentifier(ItemIds::SPAWN_EGG, EntityLegacyIds::SNOW_GOLEM), "SnowGolem Spawn Egg") extends SpawnEgg{
             protected function createEntity(World $world, Vector3 $pos, float $yaw, float $pitch) : Entity{
                 return new SnowGolem(Location::fromObject($pos, $world, $yaw, $pitch));
             }
-        }, true);
+        }, "minecraft:snow_golem_spawn_egg");
 
         $this->saveDefaultConfig();
         $data = $this->getConfig()->getAll();
@@ -196,6 +193,28 @@ class PureEntities extends PluginBase implements Listener{
         $this->getServer()->getPluginManager()->registerEvents($this, $this);
     }
 
+    public function registerItem(Item $item, string $itemName): void{
+      GlobalItemDataHandlers::getDeserializer()->map($itemName, fn() => clone $item);
+        GlobalItemDataHandlers::getSerializer()->map($item, fn() => new SavedItemData($itemName));
+        StringToItemParser::getInstance()->register($itemName, fn() => clone $item);
+        CreativeInventory::getInstance()->add($item);
+    }
+    
+    public function OnInteract(PlayerInteractEvent $event) {
+    	$item = $event->getItem();
+    
+    	if ($item->getTypeId() === ItemIds::ZOMBIE_SPAWN_EGG) {
+			$event->cancel();
+			$blockPosition = $event->getBlock()->getPosition();
+			$entity = (new Zombie(
+				Location::fromObject($blockPosition->add(0.5, 1, 0.5),
+				$blockPosition->getWorld(), lcg_value() * 360, 0))
+			);
+			$entity->spawnToAll();
+			
+		}
+    }
+
     public function onPlayerQuitEvent(PlayerQuitEvent $event) : void{
         $player = $event->getPlayer();
         if(isset(Vehicle::$riders[$id = $player->getId()])){
@@ -223,17 +242,17 @@ class PureEntities extends PluginBase implements Listener{
         if($packet instanceof InteractPacket && $packet->action === InteractPacket::ACTION_LEAVE_VEHICLE){
             $event->cancel();
             $player = $event->getOrigin()->getPlayer();
-            $entity = $player->getWorld()->getEntity($packet->target);
+            $entity = $player->getWorld()->getEntity($packet->targetActorRuntimeId);
             if($entity instanceof Vehicle && !$entity->isClosed()){
                 $entity->removePassenger($player);
             }
         }elseif(
             $packet instanceof InventoryTransactionPacket &&
             $packet->trData instanceof UseItemOnEntityTransactionData &&
-            $packet->trData->getActionType() === UseItemOnEntityTransactionData::ACTION_INTERACT
+            $packet->trData->getActionType() === UseItemOnEntityTransactionData::ACTION_ITEM_INTERACT
         ){
             $player = $event->getOrigin()->getPlayer();
-            $entity = $player->getWorld()->getEntity($packet->trData->getEntityRuntimeId());
+            $entity = $player->getWorld()->getEntity($packet->trData->getActorRuntimeId());
             if(($entity instanceof LivingBase || $entity instanceof Vehicle) && !$entity->isClosed()){
                 $event->cancel();
                 $item = $player->getInventory()->getItemInHand();
@@ -253,11 +272,11 @@ class PureEntities extends PluginBase implements Listener{
             }
         }elseif($packet instanceof MoveActorAbsolutePacket){
             $player = $event->getOrigin()->getPlayer();
-            $entity = $player->getWorld()->getEntity($packet->entityRuntimeId);
+            $entity = $player->getWorld()->getEntity($packet->actorRuntimeId);
             if($entity instanceof Vehicle && !$entity->isClosed() && $entity->getRider() === $player){
                 $event->cancel();
                 //[xRot, yRot, zRot] = [pitch, headYaw, yaw]
-                $entity->absoluteMove($packet->position, $packet->yRot, $packet->xRot);
+                $entity->absoluteMove($packet->position, $packet->yaw, $packet->pitch);
             }
         }elseif($packet instanceof AnimatePacket){
             $player = $event->getOrigin()->getPlayer();
@@ -265,15 +284,18 @@ class PureEntities extends PluginBase implements Listener{
             if($vehicle !== null && !$vehicle->isClosed() && $vehicle->handleAnimatePacket($packet)){
                 $event->cancel();
             }
-        }elseif($packet instanceof PlayerInputPacket){
-            $player = $event->getOrigin()->getPlayer();
-            $vehicle = Vehicle::$riders[$player->getId()] ?? null;
+        }elseif($packet instanceof PlayerAuthInputPacket){
+         $player = $event->getOrigin()->getPlayer();
+         $vehicle = Vehicle::$riders[$player->getId()] ?? null;
             if($vehicle !== null && !$vehicle->isClosed() && $vehicle->getRider() === $player){
-                $event->cancel();
-                $vehicle->updateMotion($packet->motionX, $packet->motionY);
-            }
-        }
-}
+              $moveVector = $packet->getMoveVecX() !== 0.0 || $packet->getMoveVecZ() !== 0.0;
+               if($moveVector){
+                  $event->cancel();
+                  $vehicle->updateMotion($packet->getMoveVecX(), $packet->getMoveVecZ());
+                }
+           }
+       }
+   }
 
     /**
      * @priority MONITOR
