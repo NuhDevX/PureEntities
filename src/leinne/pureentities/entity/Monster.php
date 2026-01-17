@@ -10,7 +10,7 @@ use pocketmine\entity\Entity;
 use pocketmine\inventory\CallbackInventoryListener;
 use pocketmine\inventory\Inventory;
 use pocketmine\item\Item;
-use pocketmine\item\ItemFactory;
+use pocketmine\block\VanillaBlocks;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\DoubleTag;
 use pocketmine\nbt\tag\ListTag;
@@ -84,7 +84,7 @@ abstract class Monster extends LivingBase{
     }
 
     public function getDefaultHeldItem() : Item{
-        return ItemFactory::air();
+        return VanillaBlocks::AIR()->asItem();
     }
 
     public function getInventory() : MonsterInventory{
