@@ -15,8 +15,7 @@ use pocketmine\data\bedrock\DyeColorIdMap;
 use pocketmine\entity\Entity;
 use pocketmine\entity\EntitySizeInfo;
 use pocketmine\item\Item;
-use pocketmine\item\ItemFactory;
-use pocketmine\item\ItemIds;
+use pocketmine\item\VanillaItems;
 use pocketmine\item\Shears;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\network\mcpe\protocol\types\entity\EntityIds;
@@ -83,17 +82,24 @@ class Sheep extends Animal{
         $this->sheared = $sheared;
     }
 
-    public function interact(Player $player, Item $item) : bool{
+ public function interact(Player $player, Item $item) : bool{        
         if($item instanceof Shears && !$this->sheared){
             $item->applyDamage(1);
+            $player->getInventory()->setItemInHand($item);
+            
             $this->sheared = true;
-            $this->getWorld()->addSound($this->location, new ShearSound());
-            $this->getWorld()->dropItem($this->location, ItemFactory::getInstance()->get(ItemIds::WOOL, DyeColorIdMap::getInstance()->toId($this->color), mt_rand(1, 3)));
+            $this->getWorld()->addSound($this->location, new ShearSound($this));
+            
+            $wool = VanillaBlocks::WOOL()->setColor($this->color)->asItem();
+            $dropCount = mt_rand(1, 3);
+            $wool->setCount($dropCount);
+            
+            $this->getWorld()->dropItem($this->location, $wool);
             return true;
         }
+        
         return false;
-    }
-
+     }
     public function canInteractWithTarget(Entity $target, float $distanceSquare) : bool{
         return false; //TODO: 아이템 유인 구현
     }
@@ -147,10 +153,11 @@ class Sheep extends Animal{
     }
 
     public function getDrops() : array{
-        return [
-            ItemFactory::getInstance()->get(ItemIds::WOOL, DyeColorIdMap::getInstance()->toId($this->color), 1),
-            ItemFactory::getInstance()->get($this->isOnFire() ? ItemIds::COOKED_MUTTON : ItemIds::RAW_MUTTON, 0, mt_rand(1, 2))
-        ];
+        $wool = VanillaBlocks::WOOL()->setColor($this->color)->asItem();
+        $meat = $this->isOnFire() ? VanillaItems::COOKED_MUTTON() : VanillaItems::RAW_MUTTON();
+        $meat->setCount(mt_rand(1, 2));
+        
+        return [$wool, $meat];
     }
 
     public function getXpDropAmount() : int{
